@@ -48,6 +48,7 @@ class SafetyConfig(_Base):
 
 class PipelineConfig(_Base):
     seed: int = 42
+    logic_version: int = 1  # bump when a stage's behavior changes (not for refactors)
     input_paths: tuple[str, ...] = ()
     output_dir: str = "data/curated"
 
@@ -58,12 +59,11 @@ class PipelineConfig(_Base):
     contamination: ContaminationConfig = ContaminationConfig()
     safety: SafetyConfig = SafetyConfig()
 
-def config_hash(self) -> str:
-
-    """SHA-256 of the settings that affect pipeline behavior."""
-    payload = self.model_dump(mode="json", exclude={"input_paths", "output_dir"})
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    def config_hash(self) -> str:
+        """SHA-256 of the settings that affect pipeline behavior."""
+        payload = self.model_dump(mode="json", exclude={"input_paths", "output_dir"})
+        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def load_config(path: str | Path) -> PipelineConfig:
