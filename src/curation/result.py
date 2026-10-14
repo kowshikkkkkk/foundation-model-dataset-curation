@@ -19,6 +19,7 @@ class StageResult:
     stage: str
     kept: list[Record] = field(default_factory=list)
     removed: list[Removed] = field(default_factory=list)
+    stats: dict[str, int] = field(default_factory=dict)  # extra counters, e.g. redactions
 
     @property
     def n_in(self) -> int:

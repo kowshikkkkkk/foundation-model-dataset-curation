@@ -41,6 +41,9 @@ class ContaminationConfig(_Base):
     ngram_size: int = Field(13, ge=1)
     benchmarks: tuple[str, ...] = ("gsm8k",)
 
+class SafetyConfig(_Base):
+    pii_action: Literal["drop", "redact"] = "redact"
+    blocklist: tuple[str, ...] = ()
 
 class PipelineConfig(_Base):
     seed: int = 42
