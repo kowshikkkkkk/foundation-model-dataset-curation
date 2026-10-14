@@ -55,6 +55,7 @@ class PipelineConfig(_Base):
     quality: QualityConfig = QualityConfig()
     language: LanguageConfig = LanguageConfig()
     contamination: ContaminationConfig = ContaminationConfig()
+    safety: SafetyConfig = SafetyConfig()
 
     def config_hash(self) -> str:
         """SHA-256 of the settings that affect pipeline behavior."""
