@@ -1,5 +1,5 @@
 seed: 42
-logic_version: 2
+logic_version: 3
 input_paths:
   - data/raw/alpaca.jsonl
 output_dir: data/curated/alpaca
@@ -10,8 +10,10 @@ normalize:
 
 quality:
   min_chars: 20
+  min_chars_instruction: 10
   max_chars: 100000
   max_line_repetition: 0.3
+  max_line_repetition_instruction: 0.5
   min_alpha_ratio: 0.6
 
 safety:

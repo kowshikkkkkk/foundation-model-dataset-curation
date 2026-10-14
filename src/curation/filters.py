@@ -31,12 +31,16 @@ def line_repetition(text: str, min_len: int = 0) -> float:
 def _check(rec: Record, cfg: QualityConfig) -> tuple[str, str] | None:
     text = rec.content()
     n = len(text)
-    if n < cfg.min_chars:
-        return "too_short", f"len={n} < {cfg.min_chars}"
+    is_doc = rec.kind == "document"
+    min_chars = cfg.min_chars if is_doc else cfg.min_chars_instruction
+    max_rep = cfg.max_line_repetition if is_doc else cfg.max_line_repetition_instruction
+
+    if n < min_chars:
+        return "too_short", f"len={n} < {min_chars}"
     if n > cfg.max_chars:
         return "too_long", f"len={n} > {cfg.max_chars}"
 
-    if rec.kind == "document":
+    if is_doc:
         a = alpha_ratio(text)
         if a < cfg.min_alpha_ratio:
             return "low_alpha_ratio", f"alpha={a:.3f} < {cfg.min_alpha_ratio:.2f}"
@@ -45,8 +49,8 @@ def _check(rec: Record, cfg: QualityConfig) -> tuple[str, str] | None:
         fields, min_len = [rec.instruction or "", rec.response or ""], _INSTRUCTION_MIN_LINE
 
     rep = max(line_repetition(f, min_len) for f in fields)
-    if rep > cfg.max_line_repetition:
-        return "high_line_repetition", f"repeated_lines={rep:.3f} > {cfg.max_line_repetition:.2f}"
+    if rep > max_rep:
+        return "high_line_repetition", f"repeated_lines={rep:.3f} > {max_rep:.2f}"
     return None
 
 

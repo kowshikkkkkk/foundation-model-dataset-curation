@@ -45,7 +45,8 @@ def language_filter(records: Iterable[Record], cfg: LanguageConfig, seed: int) -
     allowed = set(cfg.allowed)
 
     for rec in records:
-        lang, conf, und_reason = _classify(rec.content(), cfg, seed)
+        basis = rec.instruction if rec.kind == "instruction" else rec.text
+        lang, conf, und_reason = _classify(basis or "", cfg, seed)
         _count(result.stats, und_reason if und_reason else f"lang_{lang}")
 
         if lang != "und" and lang not in allowed:
