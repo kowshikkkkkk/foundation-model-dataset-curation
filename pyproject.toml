@@ -9,6 +9,7 @@ requires-python = ">=3.10"
 dependencies = [
     "pydantic>=2",
     "pyyaml",
+    "datasketch",
 ]
 
 [project.optional-dependencies]
