@@ -15,6 +15,7 @@ from curation.schema import Record
 from curation.language import language_filter
 from curation.stats import compute_stats
 from curation.export import export_dataset
+from curation.provenance import write_manifest
 
 @dataclass
 class PipelineRun:
@@ -85,6 +86,8 @@ def main(argv: list[str] | None = None) -> None:
 
     out = export_dataset(run.final, cfg.output_dir)
     print(f"exported {out['n_records']} records to {out['jsonl']} and {out['parquet']}")
+    manifest = write_manifest(cfg, run.stages, out, cfg.output_dir)
+    print(f"dataset_version: {manifest['dataset_version']}")
 
 
 if __name__ == "__main__":
