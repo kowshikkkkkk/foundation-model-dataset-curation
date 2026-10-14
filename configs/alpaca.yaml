@@ -13,7 +13,7 @@ quality:
   min_chars_instruction: 10
   max_chars: 100000
   max_line_repetition: 0.3
-  max_line_repetition_instruction: 0.5
+  max_line_repetition_instruction: 0.8
   min_alpha_ratio: 0.6
 
 safety:
@@ -28,7 +28,7 @@ dedup:
 language:
   allowed: [en]
   min_confidence: 0.9
-  min_detect_chars: 40
+  min_detect_chars: 100
 
 contamination:
   ngram_size: 13

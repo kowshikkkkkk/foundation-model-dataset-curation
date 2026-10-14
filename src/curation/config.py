@@ -30,7 +30,7 @@ class QualityConfig(_Base):
     min_chars_instruction: int = Field(10, ge=0)
     max_chars: int = Field(100_000, ge=1)
     max_line_repetition: float = Field(0.3, ge=0, le=1)  # share of repeated lines
-    max_line_repetition_instruction: float = Field(0.5, ge=0, le=1)
+    max_line_repetition_instruction: float = Field(0.8, ge=0, le=1)
     min_alpha_ratio: float = Field(0.6, ge=0, le=1)      # share of letters
 
 
