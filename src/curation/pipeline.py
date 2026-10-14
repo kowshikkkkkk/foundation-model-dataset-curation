@@ -13,12 +13,15 @@ from curation.result import StageResult
 from curation.safety import safety_filter
 from curation.schema import Record
 from curation.language import language_filter
+from curation.stats import compute_stats
 
 @dataclass
 class PipelineRun:
     config_hash: str
     stages: list[StageResult] = field(default_factory=list)
     final: list[Record] = field(default_factory=list)
+    before: dict = field(default_factory=dict)
+    after: dict = field(default_factory=dict)
 
 
 def run_pipeline(cfg: PipelineConfig) -> PipelineRun:
@@ -27,6 +30,7 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineRun:
     first = ingest(cfg.input_paths)
     run.stages.append(first)
     records = first.kept
+    run.before = compute_stats(records)
 
     steps: list[Callable[[list[Record]], StageResult]] = [
         lambda recs: normalize(recs, cfg.normalize),
@@ -48,7 +52,9 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineRun:
         run.stages.append(result)
         records = result.kept
 
+    run.after = compute_stats(records)
     run.final = records
+
     return run
 
 
@@ -61,7 +67,11 @@ def print_funnel(run: PipelineRun) -> None:
         if s.stats:
             print(f"{'':<14}stats: {s.stats}")
     print(f"final records: {len(run.final)}")
-
+    print()
+    print(f"{'metric':<16}{'before':>10}{'after':>10}")
+    for key in ("n_records", "mean_chars", "vocab_size", "distinct_1", "distinct_2"):
+        print(f"{key:<16}{run.before[key]:>10}{run.after[key]:>10}")
+    print("languages (after):", run.after["languages"])
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Dataset curation pipeline")
