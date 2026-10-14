@@ -34,16 +34,43 @@ def verhoeff(number: str) -> bool:
 
 
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-_AADHAAR = re.compile(r"(?<!\d)[2-9]\d{3}[ -]?\d{4}[ -]?\d{4}(?!\d)")
+_AADHAAR = re.compile(
+    r"(?<!\d)(?<!\d[ -])[2-9]\d{3}[ -]?\d{4}[ -]?\d{4}(?![ -]?\d)"
+)
 _PAN = re.compile(r"\b[A-Z]{5}\d{4}[A-Z]\b")
 _PHONE = re.compile(r"(?<!\d)(?:\+91[ -]?|91[ -]?|0)?[6-9]\d{4}[ -]?\d{5}(?!\d)")
 
+_RESERVED_DOMAINS = {"example.com", "example.org", "example.net"}
+_RESERVED_TLDS = {"example", "test", "invalid", "localhost"}
+_PHONE_CONTEXT = re.compile(r"phone|mobile|\bcall|contact|\btel\b|whatsapp|\bcell\b|\bph\b")
+_BARE_PHONE = re.compile(r"[6-9]\d{9}")
+
+
+# Validators take the regex match and return True if it should be redacted.
+def _email_ok(m: re.Match) -> bool:
+    labels = m.group().rsplit("@", 1)[1].lower().split(".")
+    if labels[-1] in _RESERVED_TLDS or ".".join(labels[-2:]) in _RESERVED_DOMAINS:
+        return False
+    return True
+
+
+def _aadhaar_ok(m: re.Match) -> bool:
+    return verhoeff(re.sub(r"[ -]", "", m.group()))
+
+
+def _phone_ok(m: re.Match) -> bool:
+    if not _BARE_PHONE.fullmatch(m.group()):
+        return True  # has a prefix or a separator
+    window = m.string[max(0, m.start() - 30): m.start()].lower()
+    return bool(_PHONE_CONTEXT.search(window))
+
+
 # Order matters: email first, Aadhaar before phone (a failed Aadhaar can still be a phone).
 _PATTERNS = [
-    ("email", _EMAIL, "[EMAIL]", None),
-    ("aadhaar", _AADHAAR, "[AADHAAR]", lambda s: verhoeff(re.sub(r"[ -]", "", s))),
+    ("email", _EMAIL, "[EMAIL]", _email_ok),
+    ("aadhaar", _AADHAAR, "[AADHAAR]", _aadhaar_ok),
     ("pan", _PAN, "[PAN]", None),
-    ("phone", _PHONE, "[PHONE]", None),
+    ("phone", _PHONE, "[PHONE]", _phone_ok),
 ]
 
 
@@ -52,7 +79,7 @@ def scrub(text: str) -> tuple[str, dict[str, int]]:
 
     def make(kind, placeholder, validator):
         def repl(m):
-            if validator and not validator(m.group()):
+            if validator and not validator(m):
                 return m.group()
             counts[kind] = counts.get(kind, 0) + 1
             return placeholder

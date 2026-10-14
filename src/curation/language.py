@@ -27,30 +27,34 @@ def _count(stats: dict[str, int], key: str) -> None:
     stats[key] = stats.get(key, 0) + 1
 
 
+def _classify(text: str, cfg: LanguageConfig, seed: int) -> tuple[str, float, str | None]:
+    """Return (lang, confidence, und_reason). lang is 'und' when we won't act on a detection."""
+    if len(text) < cfg.min_detect_chars:
+        return "und", 0.0, "und_too_short"
+    found = detect_language(text, seed)
+    if found is None:
+        return "und", 0.0, "und_undetected"
+    lang, conf = found
+    if conf < cfg.min_confidence:
+        return "und", conf, "und_low_confidence"
+    return lang, conf, None
+
+
 def language_filter(records: Iterable[Record], cfg: LanguageConfig, seed: int) -> StageResult:
     result = StageResult(stage=STAGE_LANG)
     allowed = set(cfg.allowed)
 
     for rec in records:
-        found = detect_language(rec.content(), seed)
-        if found is None:
-            _count(result.stats, "lang_undetected")
-            result.removed.append(Removed(rec.id, STAGE_LANG, "language_undetected"))
-            continue
+        lang, conf, und_reason = _classify(rec.content(), cfg, seed)
+        _count(result.stats, und_reason if und_reason else f"lang_{lang}")
 
-        lang, conf = found
-        _count(result.stats, f"lang_{lang}")
-
-        if lang not in allowed:
+        if lang != "und" and lang not in allowed:
             result.removed.append(
                 Removed(rec.id, STAGE_LANG, "language_not_allowed", f"{lang} ({conf:.2f})")
             )
-        elif conf < cfg.min_confidence:
-            result.removed.append(
-                Removed(rec.id, STAGE_LANG, "language_low_confidence", f"{lang} ({conf:.2f})")
-            )
-        else:
-            meta = {**rec.meta, "lang": lang, "lang_conf": round(conf, 3)}
-            result.kept.append(Record(**{**rec.model_dump(), "meta": meta}))
+            continue
+
+        meta = {**rec.meta, "lang": lang, "lang_conf": round(conf, 3)}
+        result.kept.append(Record(**{**rec.model_dump(), "meta": meta}))
 
     return result

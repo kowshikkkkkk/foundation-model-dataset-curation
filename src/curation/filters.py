@@ -8,7 +8,7 @@ from curation.result import Removed, StageResult
 from curation.schema import Record
 
 STAGE_QUALITY = "quality"
-
+_INSTRUCTION_MIN_LINE = 20  # chars; shorter lines are ignored for instruction records
 
 def alpha_ratio(text: str) -> float:
     """Share of non-whitespace characters that are letters or combining marks."""
@@ -19,33 +19,41 @@ def alpha_ratio(text: str) -> float:
     return letters / len(chars)
 
 
-def line_repetition(text: str) -> float:
-    """Share of non-empty lines that repeat an earlier line."""
-    lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
+def line_repetition(text: str, min_len: int = 0) -> float:
+    """Share of qualifying lines that repeat an earlier line."""
+    lines = [ln.strip() for ln in text.split("\n")]
+    lines = [ln for ln in lines if ln and len(ln) >= min_len]
     if len(lines) < 2:
         return 0.0
     return 1 - len(set(lines)) / len(lines)
 
 
-def _check(text: str, cfg: QualityConfig) -> tuple[str, str] | None:
+def _check(rec: Record, cfg: QualityConfig) -> tuple[str, str] | None:
+    text = rec.content()
     n = len(text)
     if n < cfg.min_chars:
         return "too_short", f"len={n} < {cfg.min_chars}"
     if n > cfg.max_chars:
         return "too_long", f"len={n} > {cfg.max_chars}"
-    a = alpha_ratio(text)
-    if a < cfg.min_alpha_ratio:
-        return "low_alpha_ratio", f"alpha={a:.2f} < {cfg.min_alpha_ratio:.2f}"
-    rep = line_repetition(text)
+
+    if rec.kind == "document":
+        a = alpha_ratio(text)
+        if a < cfg.min_alpha_ratio:
+            return "low_alpha_ratio", f"alpha={a:.3f} < {cfg.min_alpha_ratio:.2f}"
+        fields, min_len = [rec.text or ""], 0
+    else:
+        fields, min_len = [rec.instruction or "", rec.response or ""], _INSTRUCTION_MIN_LINE
+
+    rep = max(line_repetition(f, min_len) for f in fields)
     if rep > cfg.max_line_repetition:
-        return "high_line_repetition", f"repeated_lines={rep:.2f} > {cfg.max_line_repetition:.2f}"
+        return "high_line_repetition", f"repeated_lines={rep:.3f} > {cfg.max_line_repetition:.2f}"
     return None
 
 
 def quality_filter(records: Iterable[Record], cfg: QualityConfig) -> StageResult:
     result = StageResult(stage=STAGE_QUALITY)
     for rec in records:
-        failure = _check(rec.content(), cfg)
+        failure = _check(rec, cfg)
         if failure is None:
             result.kept.append(rec)
         else:

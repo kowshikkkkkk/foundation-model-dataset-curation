@@ -86,7 +86,7 @@ def main() -> None:
                 if row:
                     found = [
                         m.group() for m in rx.finditer(raw_content(row))
-                        if validator is None or validator(m.group())
+                        if validator is None or validator(m)
                     ]
                 content = rec.content()
                 i = content.find(placeholder)

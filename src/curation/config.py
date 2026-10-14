@@ -34,7 +34,8 @@ class QualityConfig(_Base):
 
 class LanguageConfig(_Base):
     allowed: tuple[str, ...] = ("en", "hi", "ta")
-    min_confidence: float = Field(0.5, ge=0, le=1)
+    min_confidence: float = Field(0.9, ge=0, le=1)   # needed to act on a detection
+    min_detect_chars: int = Field(40, ge=0)          # shorter text is tagged "und"
 
 
 class ContaminationConfig(_Base):
@@ -57,11 +58,12 @@ class PipelineConfig(_Base):
     contamination: ContaminationConfig = ContaminationConfig()
     safety: SafetyConfig = SafetyConfig()
 
-    def config_hash(self) -> str:
-        """SHA-256 of the settings that affect pipeline behavior."""
-        payload = self.model_dump(mode="json", exclude={"input_paths", "output_dir"})
-        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+def config_hash(self) -> str:
+
+    """SHA-256 of the settings that affect pipeline behavior."""
+    payload = self.model_dump(mode="json", exclude={"input_paths", "output_dir"})
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def load_config(path: str | Path) -> PipelineConfig:

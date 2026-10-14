@@ -23,8 +23,9 @@ dedup:
   lsh_threshold: 0.8
 
 language:
-  allowed: [en, hi, ta]
-  min_confidence: 0.5
+  allowed: [en]
+  min_confidence: 0.9
+  min_detect_chars: 40
 
 contamination:
   ngram_size: 13
