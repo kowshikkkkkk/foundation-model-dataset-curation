@@ -12,7 +12,7 @@ from curation.normalize import normalize
 from curation.result import StageResult
 from curation.safety import safety_filter
 from curation.schema import Record
-
+from curation.language import language_filter
 
 @dataclass
 class PipelineRun:
@@ -32,6 +32,7 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineRun:
         lambda recs: normalize(recs, cfg.normalize),
         lambda recs: quality_filter(recs, cfg.quality),
         lambda recs: safety_filter(recs, cfg.safety),
+        lambda recs: language_filter(recs, cfg.language, cfg.seed),
         exact_dedup,
         lambda recs: near_dedup(recs, cfg.dedup, cfg.seed),
     ]
