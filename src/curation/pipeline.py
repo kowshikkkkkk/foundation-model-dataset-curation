@@ -14,6 +14,7 @@ from curation.safety import safety_filter
 from curation.schema import Record
 from curation.language import language_filter
 from curation.stats import compute_stats
+from curation.export import export_dataset
 
 @dataclass
 class PipelineRun:
@@ -81,6 +82,9 @@ def main(argv: list[str] | None = None) -> None:
     cfg = load_config(args.config)
     run = run_pipeline(cfg)
     print_funnel(run)
+
+    out = export_dataset(run.final, cfg.output_dir)
+    print(f"exported {out['n_records']} records to {out['jsonl']} and {out['parquet']}")
 
 
 if __name__ == "__main__":
