@@ -1,5 +1,5 @@
 seed: 42
-logic_version: 3
+logic_version: 4
 input_paths:
   - data/raw/alpaca.jsonl
 output_dir: data/curated/alpaca
@@ -33,3 +33,4 @@ language:
 contamination:
   ngram_size: 13
   benchmarks: [gsm8k]
+  benchmark_dir: data/benchmarks

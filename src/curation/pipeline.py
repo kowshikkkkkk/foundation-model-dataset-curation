@@ -17,6 +17,8 @@ from curation.stats import compute_stats
 from curation.export import export_dataset
 from curation.provenance import write_manifest
 from curation.report import write_report
+from curation.contamination import contamination_filter, load_benchmark_index
+
 
 @dataclass
 class PipelineRun:
@@ -43,6 +45,10 @@ def run_pipeline(cfg: PipelineConfig) -> PipelineRun:
         exact_dedup,
         lambda recs: near_dedup(recs, cfg.dedup, cfg.seed),
     ]
+    if cfg.contamination.benchmarks:
+        index = load_benchmark_index(cfg.contamination)
+        n = cfg.contamination.ngram_size
+        steps.insert(4, lambda recs: contamination_filter(recs, index, n))
 
     for step in steps:
         n_before = len(records)

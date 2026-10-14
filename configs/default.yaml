@@ -1,5 +1,5 @@
 seed: 42
-logic_version: 3
+logic_version: 4
 input_paths:
   - data/raw/sample.jsonl
 output_dir: data/curated
@@ -32,4 +32,5 @@ language:
 
 contamination:
   ngram_size: 13
-  benchmarks: [gsm8k]
+  benchmarks: []
+  benchmark_dir: data/benchmarks

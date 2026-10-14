@@ -9,3 +9,4 @@ data/raw/*
 data/curated/*
 !data/raw/.gitkeep
 !data/curated/.gitkeep
+data/benchmarks/*
