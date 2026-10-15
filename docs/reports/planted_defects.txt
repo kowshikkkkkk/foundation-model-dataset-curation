@@ -1,0 +1,11 @@
+defect            n  caught  95% CI     other outcomes
+exact_dup        20      20  0.84-1.00   
+near_dup         20      20  0.84-1.00   
+junk             20      20  0.84-1.00   
+loop             20      19  0.76-0.99   {'quality/low_alpha_ratio': 1}
+too_short        20      20  0.84-1.00   
+contamination    20      20  0.84-1.00   
+foreign          20      20  0.84-1.00   
+pii              20      20  0.84-1.00   
+
+clean base records removed: 0/40 
