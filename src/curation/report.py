@@ -134,6 +134,8 @@ def build_report(stages: list[StageResult], before: dict, after: dict, manifest:
     L.append(f"- Python {code['python']}")
     for pkg, ver in code["packages"].items():
         L.append(f"- {pkg} {ver}")
+    for b in manifest.get("benchmarks", []):
+        L.append(f"- Benchmark {b['path']} sha256 `{b['sha256'][:12]}`")
     L.append("- Full configuration and input hashes are in `manifest.json`.")
     L.append("")
 

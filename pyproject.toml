@@ -16,6 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest"]
+data = ["datasets"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

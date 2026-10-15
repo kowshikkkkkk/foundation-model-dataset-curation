@@ -27,12 +27,14 @@ def _file_info(path: str | Path) -> dict:
     return {"path": p.as_posix(), "sha256": file_sha256(p), "bytes": p.stat().st_size}
 
 
-def dataset_version(input_infos: list[dict], config_hash: str) -> str:
+def dataset_version(
+    input_infos: list[dict], config_hash: str, benchmark_infos: list[dict] = ()
+) -> str:
     # Order is kept on purpose: input order can change which duplicate survives.
-    payload = json.dumps(
-        {"inputs": [i["sha256"] for i in input_infos], "config": config_hash},
-        sort_keys=True,
-    )
+    body = {"inputs": [i["sha256"] for i in input_infos], "config": config_hash}
+    if benchmark_infos:
+        body["benchmarks"] = [b["sha256"] for b in benchmark_infos]
+    payload = json.dumps(body, sort_keys=True)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:12]
 
 
@@ -63,12 +65,17 @@ def _code_info() -> dict:
 def build_manifest(cfg: PipelineConfig, stages: list[StageResult], outputs: dict) -> dict:
     inputs = [_file_info(p) for p in cfg.input_paths]
     config_hash = cfg.config_hash()
+    benchmarks = [
+        _file_info(Path(cfg.contamination.benchmark_dir) / f"{name}.jsonl")
+        for name in cfg.contamination.benchmarks
+    ]
     return {
-        "dataset_version": dataset_version(inputs, config_hash),
+        "dataset_version": dataset_version(inputs, config_hash, benchmarks),
         "created_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "config_hash": config_hash,
         "config": cfg.model_dump(mode="json"),
         "inputs": inputs,
+        "benchmarks": benchmarks,
         "outputs": {
             "jsonl": _file_info(outputs["jsonl"]),
             "parquet": _file_info(outputs["parquet"]),
