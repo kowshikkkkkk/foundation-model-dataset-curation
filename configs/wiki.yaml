@@ -1,0 +1,36 @@
+seed: 42
+logic_version: 5
+input_paths:
+  - data/raw/wiki.jsonl
+output_dir: data/curated/wiki
+
+normalize:
+  unicode_form: NFKC
+  collapse_whitespace: true
+
+quality:
+  min_chars: 20
+  min_chars_instruction: 10
+  max_chars: 250000
+  max_line_repetition: 0.5
+  max_line_repetition_instruction: 0.8
+  min_alpha_ratio: 0.6
+
+safety:
+  pii_action: redact
+  blocklist: []
+
+dedup:
+  shingle_size: 5
+  num_perm: 128
+  lsh_threshold: 0.8
+
+language:
+  allowed: [en, ta, hi]
+  min_confidence: 0.9
+  min_detect_chars: 40
+
+contamination:
+  ngram_size: 13
+  benchmarks: []
+  benchmark_dir: data/benchmarks
